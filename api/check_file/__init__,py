@@ -1,0 +1,20 @@
+import azure.functions as func
+from azure.storage.blob import BlobServiceClient
+import os
+
+connect_str = os.environ["AzureWebJobsStorage"]
+container_name = "files"
+
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    name = req.params.get('name')
+    if not name:
+        return func.HttpResponse("Missing name", status_code=400)
+
+    blob_service = BlobServiceClient.from_connection_string(connect_str)
+    container_client = blob_service.get_container_client(container_name)
+
+    exists = container_client.get_blob_client(f"{name}.txt").exists()
+    return func.HttpResponse(
+        body=f'{{"exists": {str(exists).lower()}}}',
+        mimetype="application/json"
+    )
